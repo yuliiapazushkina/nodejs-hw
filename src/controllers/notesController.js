@@ -50,9 +50,9 @@ export const deleteNote = async (req, res, next) => {
 export const updateNote = async (req, res, next) => {
   try {
     const note = await Note.findByIdAndUpdate(
-      req.params.noteId,
-      req.body,
-      { new: true }
+  req.params.noteId,
+  req.body,
+  { returnDocument: 'after' }
     );
 
     if (!note) {
