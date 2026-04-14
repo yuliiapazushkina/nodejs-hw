@@ -17,11 +17,10 @@ export const getAllNotes = async (req, res, next) => {
 
     const skip = (page - 1) * perPage;
 
-    const totalNotes = await Note.countDocuments(filter);
-
-    const notes = await Note.find(filter)
-      .skip(skip)
-      .limit(perPage);
+    const [totalNotes, notes] = await Promise.all([
+      Note.countDocuments(filter),
+      Note.find(filter).skip(skip).limit(perPage),
+    ]);
 
     const totalPages = Math.ceil(totalNotes / perPage);
 
@@ -37,6 +36,7 @@ export const getAllNotes = async (req, res, next) => {
   }
 };
 
+// GET by ID
 export const getNoteById = async (req, res, next) => {
   try {
     const note = await Note.findById(req.params.noteId);
@@ -51,6 +51,7 @@ export const getNoteById = async (req, res, next) => {
   }
 };
 
+// POST
 export const createNote = async (req, res, next) => {
   try {
     const note = await Note.create(req.body);
@@ -60,6 +61,7 @@ export const createNote = async (req, res, next) => {
   }
 };
 
+// DELETE
 export const deleteNote = async (req, res, next) => {
   try {
     const note = await Note.findByIdAndDelete(req.params.noteId);
@@ -74,6 +76,7 @@ export const deleteNote = async (req, res, next) => {
   }
 };
 
+// PATCH
 export const updateNote = async (req, res, next) => {
   try {
     const note = await Note.findByIdAndUpdate(
