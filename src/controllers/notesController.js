@@ -3,8 +3,35 @@ import createHttpError from 'http-errors';
 
 export const getAllNotes = async (req, res, next) => {
   try {
-    const notes = await Note.find();
-    res.status(200).json(notes);
+    const { page = 1, perPage = 10, tag, search } = req.query;
+
+    const filter = {};
+
+    if (tag) {
+      filter.tag = tag;
+    }
+
+    if (search) {
+      filter.$text = { $search: search };
+    }
+
+    const skip = (page - 1) * perPage;
+
+    const totalNotes = await Note.countDocuments(filter);
+
+    const notes = await Note.find(filter)
+      .skip(skip)
+      .limit(perPage);
+
+    const totalPages = Math.ceil(totalNotes / perPage);
+
+    res.status(200).json({
+      page: Number(page),
+      perPage: Number(perPage),
+      totalNotes,
+      totalPages,
+      notes,
+    });
   } catch (error) {
     next(error);
   }
@@ -52,7 +79,7 @@ export const updateNote = async (req, res, next) => {
     const note = await Note.findByIdAndUpdate(
       req.params.noteId,
       req.body,
-      { new: true }
+      { returnDocument: 'after' }
     );
 
     if (!note) {
