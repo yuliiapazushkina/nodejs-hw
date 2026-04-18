@@ -1,9 +1,16 @@
-import { Joi } from 'celebrate';
-import mongoose from 'mongoose';
+import { Joi, Segments} from 'celebrate';
+import { isValidObjectId } from 'mongoose';
 import { TAGS } from '../constants/tags.js';
 
+const objectIdValidation = (value, helpers) => {
+  if (!isValidObjectId(value)) {
+    return helpers.message('Invalid ID format');
+  }
+  return value;
+};
+
 export const getAllNotesSchema = {
-  query: Joi.object({
+  [Segments.QUERY]: Joi.object().keys({
     page: Joi.number().integer().min(1).default(1),
     perPage: Joi.number().integer().min(5).max(20).default(10),
     tag: Joi.string().valid(...TAGS),
@@ -12,18 +19,13 @@ export const getAllNotesSchema = {
 };
 
 export const noteIdSchema = {
-  params: Joi.object({
-    noteId: Joi.string().custom((value, helpers) => {
-      if (!mongoose.isValidObjectId(value)) {
-        return helpers.error('any.invalid');
-      }
-      return value;
-    }),
+  [Segments.PARAMS]: Joi.object().keys({
+    noteId: Joi.string().custom(objectIdValidation).required(),
   }),
 };
 
 export const createNoteSchema = {
-  body: Joi.object({
+  [Segments.BODY]: Joi.object().keys({
     title: Joi.string().min(1).required(),
     content: Joi.string().allow(''),
     tag: Joi.string().valid(...TAGS),
@@ -31,10 +33,14 @@ export const createNoteSchema = {
 };
 
 export const updateNoteSchema = {
-  params: noteIdSchema.params,
-  body: Joi.object({
-    title: Joi.string().min(1),
-    content: Joi.string().allow(''),
-    tag: Joi.string().valid(...TAGS),
-  }).min(1),
+  [Segments.PARAMS]: Joi.object().keys({
+    noteId: Joi.string().custom(objectIdValidation).required(),
+  }),
+  [Segments.BODY]: Joi.object()
+    .keys({
+      title: Joi.string().min(1),
+      content: Joi.string().allow(''),
+      tag: Joi.string().valid(...TAGS),
+    })
+    .min(1),
 };
